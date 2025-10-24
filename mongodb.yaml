@@ -5,7 +5,7 @@ metadata:
   name: mongo-sc
 provisioner: kubernetes.io/azure-disk
 parameters:
-  storageaccounttype: Standard_LRS
+  storageaccounttype: StandardSSD_LRS
   kind: Managed
 volumeBindingMode: WaitForFirstConsumer
 
