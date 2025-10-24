@@ -5,7 +5,7 @@ metadata:
   name: managed-premium-retain
 provisioner: disk.csi.azure.com
 parameters:
-  skuName: Premium_ZRS
+  skuName: Standard_LRS
 reclaimPolicy: Retain
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
