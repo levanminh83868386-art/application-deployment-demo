@@ -1,12 +1,13 @@
 ---
-apiVersion: storage.k8s.io/v1
 kind: StorageClass
+apiVersion: storage.k8s.io/v1
 metadata:
-  name: mongo-sc2
-provisioner: kubernetes.io/azure-disk
+  name: azuredisk-csi-waitforfirstconsumer
+provisioner: disk.csi.azure.com
 parameters:
-  storageaccounttype: StandardSSD_LRS
-  kind: Managed
+  skuname: StandardSSD_LRS
+allowVolumeExpansion: true
+reclaimPolicy: Delete
 volumeBindingMode: WaitForFirstConsumer
 
 
@@ -73,7 +74,7 @@ spec:
     - metadata:
         name: data-volume
       spec:
-        storageClassName: mongo-sc2
+        storageClassName: azuredisk-csi-waitforfirstconsumer
         accessModes:
           - "ReadWriteOnce"
         resources:
