@@ -1,13 +1,15 @@
 ---
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
+apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: mongo-sc
-provisioner: kubernetes.io/azure-disk
-parameters:
-  storageaccounttype: StandardSSD_LRS
-  kind: Managed
-volumeBindingMode: WaitForFirstConsumer
+    name: azure-managed-disk
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: managed-csi
+  resources:
+    requests:
+      storage: 1Gi
 
 
 ---
@@ -69,15 +71,9 @@ spec:
         volumeMounts:
             - name: data-volume
               mountPath: /data/db
-  volumeClaimTemplates:
-    - metadata:
-        name: data-volume
-      spec:
-        storageClassName: mongo-sc
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "1Gi"
+  volumes:
+    - name: data-volume
+      persistentVolumeClaim:
+        claimName: azure-managed-disk
 
 
