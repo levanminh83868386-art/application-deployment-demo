@@ -2,7 +2,7 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: mongo-sc
+  name: mongo-sc2
 provisioner: kubernetes.io/azure-disk
 parameters:
   storageaccounttype: StandardSSD_LRS
@@ -73,7 +73,7 @@ spec:
     - metadata:
         name: data-volume
       spec:
-        storageClassName: mongo-sc
+        storageClassName: mongo-sc2
         accessModes:
           - "ReadWriteOnce"
         resources:
