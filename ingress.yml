@@ -9,14 +9,14 @@ spec:
   rules:
   - http:
       paths:
-      - path: /app
+      - path: "/app"
         pathType: Prefix
         backend:
           service:
             name: frontend
             port:
               number: 3000
-      - path: /argocd
+      - path: "/argocd"
         pathType: Prefix
         backend:
           service:
