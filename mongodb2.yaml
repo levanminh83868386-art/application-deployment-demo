@@ -1,15 +1,3 @@
----
-kind: StorageClass
-apiVersion: storage.k8s.io/v1
-metadata:
-  name: azuredisk-csi-waitforfirstconsumer
-provisioner: disk.csi.azure.com
-parameters:
-  skuname: StandardSSD_LRS
-allowVolumeExpansion: true
-reclaimPolicy: Delete
-volumeBindingMode: WaitForFirstConsumer
-
 
 ---
 apiVersion: v1
@@ -70,15 +58,4 @@ spec:
         volumeMounts:
             - name: data-volume
               mountPath: /data/db
-  volumeClaimTemplates:
-    - metadata:
-        name: data-volume
-      spec:
-        storageClassName: azuredisk-csi-waitforfirstconsumer
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "1Gi"
-
 
