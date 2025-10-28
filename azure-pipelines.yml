@@ -9,113 +9,134 @@ variables:
   aksCluster: 'devop-aks'             # AKS cluster name
   namespace: 'dev'
   containerRegistry: 'devopacr.azurecr.io'
+  containerRegistryName: 'devopacr'
   deploymentContextPath: '.'
   tag: 'latest'
 
-steps:
-# Connect to AKS
-- task: AzureCLI@2
-  displayName: 'Connect to AKS'
-  inputs:
-    azureSubscription: '$(azureSubscription)'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksCluster) --overwrite-existing
-      kubectl config current-context
 
-# Create namespace if not exists
-- script: |
-    kubectl get namespace $(namespace) || kubectl create namespace $(namespace)
-    kubectl config set-context --current --namespace=$(namespace)
-  displayName: 'Create namespace if not exists'
+jobs:
+- job: CI
+  steps:
+  - task: AzureCLI@2
+    displayName: 'Build and Push Image to ACR'
+    inputs:
+      azureSubscription: '$(azureSubscription)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        echo  "🚀 Starting backend image build and push..."
+        az acr build --registry  $(containerRegistryName) --image backend:latest $(deploymentContextPath)/src/backend/
+        echo "✅ Backend image build and push completed."
+        echo  "🚀 Starting frontend image build and push..."
+        az acr build --registry  $(containerRegistryName) --image frontend:latest $(deploymentContextPath)/src/frontend/
+        echo "✅ Frontend image build and push completed."
 
-# Database
-- script: |
-    echo "Create storageclass, pvc and database"
-    kubectl apply -f $(deploymentContextPath)/mongodb.yaml
-  displayName: 'Create storageclass, pvc and database'
+- job: CD
+  dependsOn: CI
+  steps:
+  # Connect to AKS
+  - task: AzureCLI@2
+    displayName: 'Connect to AKS'
+    inputs:
+      azureSubscription: '$(azureSubscription)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az aks get-credentials --resource-group $(aksResourceGroup) --name $(aksCluster) --overwrite-existing
+        kubectl config current-context
 
-- script: |
-    echo -e "\nverify storage class"
-    kubectl get sc
+  # Create namespace if not exists
+  - script: |
+      kubectl get namespace $(namespace) || kubectl create namespace $(namespace)
+      kubectl config set-context --current --namespace=$(namespace)
+    displayName: 'Create namespace if not exists'
 
-    echo -e "\nverify pvc"
-    kubectl get pvc
+  # Database
+  - script: |
+      echo "Create storageclass, pvc and database"
+      kubectl apply -f $(deploymentContextPath)/mongodb.yaml
+    displayName: 'Create storageclass, pvc and database'
 
-    echo -e "\nverify StatefulSet"
-    kubectl get sts
+  - script: |
+      echo -e "\nverify storage class"
+      kubectl get sc
 
-    echo -e "\nverify database pods"
-    kubectl get pod
+      echo -e "\nverify pvc"
+      kubectl get pvc
 
-    echo -e "\nverify database service"
-    kubectl get service
+      echo -e "\nverify StatefulSet"
+      kubectl get sts
 
-    echo -e "\nverify configmap"
-    kubectl get configmap
+      echo -e "\nverify database pods"
+      kubectl get pod
 
-    echo -e "\ncheck configmap details"
-    kubectl describe configmap mongo-config
+      echo -e "\nverify database service"
+      kubectl get service
 
-    echo -e "\nverify secret"
-    kubectl get secret
+      echo -e "\nverify configmap"
+      kubectl get configmap
 
-    echo -e "\ncheck secret details"
-    kubectl get secret mongo-secrets -o yaml
+      echo -e "\ncheck configmap details"
+      kubectl describe configmap mongo-config
 
-  displayName: 'Verify storageclass, pvc and database'
+      echo -e "\nverify secret"
+      kubectl get secret
 
-# Backend
-- script: |
-    echo "Using registry: $(containerRegistry)"
-    echo "Namespace: $(namespace)"
+      echo -e "\ncheck secret details"
+      kubectl get secret mongo-secrets -o yaml
 
-    echo -e "\nDeploying backend..."
-    export REGISTRY=$(containerRegistry)
-    envsubst < $(deploymentContextPath)/backend.yaml | kubectl apply -f -
-  displayName: 'Deploy backend image to AKS'
+    displayName: 'Verify storageclass, pvc and database'
 
-- script: |
-    echo "verify backend pods"
-    kubectl get pods
-    
-    echo -e "\nverify backend service"
-    kubectl get svc
-  displayName: 'Verify backend deployment'
+  # Backend
+  - script: |
+      echo "Using registry: $(containerRegistry)"
+      echo "Namespace: $(namespace)"
 
-# Frontend
-- script: |
-    echo "Using registry: $(containerRegistry)"
-    echo "Namespace: $(namespace)"
+      echo -e "\nDeploying backend..."
+      export REGISTRY=$(containerRegistry)
+      envsubst < $(deploymentContextPath)/backend.yaml | kubectl apply -f -
+    displayName: 'Deploy backend image to AKS'
 
-    echo -e "\nDeploying frontend..."
-    export REGISTRY=$(containerRegistry)
-    envsubst < $(deploymentContextPath)/frontend.yaml | kubectl apply -f -
-  displayName: 'Deploy frontend image to AKS'
+  - script: |
+      echo "verify backend pods"
+      kubectl get pods
+      
+      echo -e "\nverify backend service"
+      kubectl get svc
+    displayName: 'Verify backend deployment'
 
-- script: |
-    echo "verify frontend pods"
-    kubectl get pods
-    
-    echo -e "\nverify frontend service"
-    kubectl get svc
-  displayName: 'Verify frontend deployment'
+  # Frontend
+  - script: |
+      echo "Using registry: $(containerRegistry)"
+      echo "Namespace: $(namespace)"
 
-# Ingress
-- script: |
-    echo "install NGINX ingress controller"
-    kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.7.1/deploy/static/provider/cloud/deploy.yaml
-  displayName: 'Application Ingress'
+      echo -e "\nDeploying frontend..."
+      export REGISTRY=$(containerRegistry)
+      envsubst < $(deploymentContextPath)/frontend.yaml | kubectl apply -f -
+    displayName: 'Deploy frontend image to AKS'
 
-- script: |
-    echo "verify ingress controller installation"
-    kubectl get pods --namespace=ingress-nginx | grep nginx
-    
-    echo -e "\ninstall application ingress"
-    kubectl apply -f $(deploymentContextPath)/ingress.yml
+  - script: |
+      echo "verify frontend pods"
+      kubectl get pods
+      
+      echo -e "\nverify frontend service"
+      kubectl get svc
+    displayName: 'Verify frontend deployment'
 
-    echo -e "\nverify application ingress"
-    kubectl get ingress -o wide
+  # Ingress
+  - script: |
+      echo "install NGINX ingress controller"
+      kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.7.1/deploy/static/provider/cloud/deploy.yaml
+    displayName: 'Application Ingress'
 
-  displayName: 'Verify ingress'
+  - script: |
+      echo "verify ingress controller installation"
+      kubectl get pods --namespace=ingress-nginx | grep nginx
+      
+      echo -e "\ninstall application ingress"
+      kubectl apply -f $(deploymentContextPath)/ingress.yml
+
+      echo -e "\nverify application ingress"
+      kubectl get ingress -o wide
+
+    displayName: 'Verify ingress'
