@@ -11,7 +11,7 @@ spec:
   rules:
   - http:
       paths:
-      - path: /
+      - path: http://132.164.150.166/grafana
         pathType: Prefix
         backend:
           service:
