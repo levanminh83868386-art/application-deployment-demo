@@ -4,7 +4,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  azureSubscription: 'HaoSubscriptionConn'      # your Azure DevOps service connection
+  azureSubscription: 'minhAzureServiceConnection'      # your Azure DevOps service connection
   aksResourceGroup: 'myTFResourceGroup'    # resource group of AKS
   aksCluster: 'minh-test-aks'             # AKS cluster name
   namespace: 'dev'
