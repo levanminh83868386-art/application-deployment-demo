@@ -5,7 +5,7 @@ metadata:
   name: ingress-grafana
   namespace: monitoring
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /grafana
 spec:
   ingressClassName: nginx
   rules:
