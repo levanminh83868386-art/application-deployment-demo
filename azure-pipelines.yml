@@ -5,11 +5,11 @@ pool:
 
 variables:
   azureSubscription: 'HaoSubscriptionConn'      # your Azure DevOps service connection
-  aksResourceGroup: 'devop-aks'    # resource group of AKS
-  aksCluster: 'devop-aks'             # AKS cluster name
+  aksResourceGroup: 'myTFResourceGroup'    # resource group of AKS
+  aksCluster: 'minh-test-aks'             # AKS cluster name
   namespace: 'dev'
   containerRegistry: 'devopacr.azurecr.io'
-  containerRegistryName: 'devopacr'
+  containerRegistryName: 'minhtestacr'
   deploymentContextPath: '.'
   tag: 'latest'
 
@@ -140,3 +140,9 @@ jobs:
       kubectl get ingress -o wide
 
     displayName: 'Verify ingress'
+
+
+  # Grafana ingress
+  - script: |
+      envsubst < $(deploymentContextPath)/ingress-grafana.yaml | kubectl apply -f -
+    displayName: 'Config Ingress for Grafana'
