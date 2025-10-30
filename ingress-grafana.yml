@@ -8,8 +8,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: 132.164.150.166
-    http:
+  - http:
       paths:
       - path: /grafana
         pathType: Prefix
