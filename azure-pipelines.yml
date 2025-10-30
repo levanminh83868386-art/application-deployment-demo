@@ -8,7 +8,7 @@ variables:
   aksResourceGroup: 'myTFResourceGroup'    # resource group of AKS
   aksCluster: 'minh-test-aks'             # AKS cluster name
   namespace: 'dev'
-  containerRegistry: 'devopacr.azurecr.io'
+  containerRegistry: 'minhtestacr.azurecr.io'
   containerRegistryName: 'minhtestacr'
   deploymentContextPath: '.'
   tag: 'latest'
