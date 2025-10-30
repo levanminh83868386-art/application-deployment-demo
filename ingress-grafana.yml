@@ -1,4 +1,3 @@
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,9 +8,10 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: 132.164.150.166
+    http:
       paths:
-      - path: 132.164.150.166/grafana
+      - path: /grafana
         pathType: Prefix
         backend:
           service:
